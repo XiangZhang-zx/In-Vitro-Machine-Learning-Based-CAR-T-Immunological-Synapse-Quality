@@ -1,0 +1,7 @@
+path: ./original
+train: train
+val: val
+test: test
+
+nc: 1  # 类别数量
+names: ['cell']  # 类别名称 

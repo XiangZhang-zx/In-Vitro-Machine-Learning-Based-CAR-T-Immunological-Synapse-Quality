@@ -6,7 +6,14 @@ data
 postrained_weights
 pretrained_weights
 results
-env
+*.zip
+*.tar.gz
+*.whl
+*.whl.part
+*.whl.part.1
+*.whl.part.2
+*.whl.part.3
+new_car_t_env
 a
 b
 c

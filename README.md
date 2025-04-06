@@ -1,22 +1,68 @@
-### In Vitro Machine Learning-Based CAR T Immunological
-Official implementation of the In Vitro Machine Learning Based CAR T Immunological Synapse Quality Measurements Correlate with Patient Clinical Outcomes. The code is written with Python. With this code, you will get an overall structure of the algorithm for training and testing.
+# 细胞图像增强效果评估实验
 
- ### Parameters
-There are many arguments that can be passed to main.py and test.py. For convenience, the most important ones are in P.py. The pretrained_weight can be downloaded from https://drive.google.com/file/d/14S5FM_ToWBW205fZ8gx2NzB5irxilU4r/view?usp=sharing and postrained_weight can be downloaded from https://drive.google.com/file/d/1ANgtRILhAahkErYWsldRjx1xChyaNZig/view?usp=sharing. After download, the folder's path -and not file itself- should be set in P.py on the pretrained_weights, postrained_weights variables. 
+本项目使用YOLOv8评估不同增强策略对细胞图像检测与分割任务的性能影响。
 
+## 目录结构
 
+```
+├── data_original.yaml    # 原始数据集配置
+├── data_a.yaml           # 增强100张数据集配置
+├── data_b.yaml           # 增强500张数据集配置
+├── data_c.yaml           # 增强1000张数据集配置
+├── setup_yolov8.sh       # 环境安装脚本
+├── prepare_data.py       # 数据准备脚本
+├── train_eval.py         # 训练评估脚本
+├── original/             # 原始数据集
+├── a/                    # 增强100张数据集
+├── b/                    # 增强500张数据集
+└── c/                    # 增强1000张数据集
+```
 
-### Antigen Dataset
-The Antigen dataset used to test and train the model can be aqcuired from here: https://drive.google.com/file/d/1EQUGgNJovywaqJKFFU-Z4zFPs0bx3_n0/view?usp=sharing
+## 使用步骤
 
+### 1. 环境准备
 
+```bash
+# 安装环境
+bash setup_yolov8.sh
 
-### Citation
+# 激活环境
+source $(conda info --base)/etc/profile.d/conda.sh
+conda activate ./yolov8_env
+```
 
-If you used this code and the dataset in your academic work, please consider citing the accompanying paper. For non-academic use, please contact professor Dongfang Liu [dongfang.liu at rutgers dot edu]:
+### 2. 数据准备
 
+```bash
+# 转换数据为YOLO格式
+python prepare_data.py
+```
 
+### 3. 训练与评估
 
+```bash
+# 开始训练和评估
+python train_eval.py
+```
 
-### References
-For the code we did get help from these two repositories: [AutoAugment](https://github.com/tensorflow/models/tree/master/research/autoaugment), [Train CIFAR10 with PyTorch](https://github.com/kuangliu/pytorch-cifar).
+### 4. 查看结果
+
+训练完成后，结果将保存在`results`目录：
+
+- `performance_comparison.png`：可视化性能对比
+- `summary_report.txt`：详细评估报告
+
+## 配置说明
+
+- 在`train_eval.py`中可调整：
+  - 训练轮数（epochs）
+  - 图像大小（imgsz）
+  - 批次大小（batch）
+  - GPU设备（device）
+
+## 数据集说明
+
+- `original`：原始数据集
+- `a`：增强100张图像的数据集
+- `b`：增强500张图像的数据集
+- `c`：增强1000张图像的数据集 
