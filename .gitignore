@@ -1,0 +1,8 @@
+activate_cpu.sh
+activate_env.sh
+antigen_dataset.zip
+__pycache__
+data
+postrained_weights
+pretrained_weights
+results
