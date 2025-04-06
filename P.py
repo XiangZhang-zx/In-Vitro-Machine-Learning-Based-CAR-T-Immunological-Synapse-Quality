@@ -1,6 +1,6 @@
-data_dir = "/mnt/Volume D/AllDatasets/artigen/dataset/"
-pretrained_weights = "/mnt/Volume D/Helpers/helper_houstonpatients/pretrained_weights/"
-postrained_weights = "/mnt/Volume D/Helpers/helper_houstonpatients/postrained_weights-100/"#"/mnt/Volume D/KGnet intensity/weights_antigen"
-save_path = ""
-source_dir = ""
+data_dir = "/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/data/"
+pretrained_weights = "/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/pretrained_weights/"
+postrained_weights = "/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/postrained_weights/"
+save_path = "/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/results/"
+source_dir = "/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/data/source/"
 #extract_dir = '../../../ND2-png/exctracted_images_contour'
