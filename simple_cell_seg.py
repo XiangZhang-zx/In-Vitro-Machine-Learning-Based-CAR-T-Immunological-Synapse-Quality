@@ -159,15 +159,11 @@ def train_model(model, train_loader, val_loader, device, num_epochs=5):
     
     return model
 
-# 计算AP和IOU性能指标
+# 计算IOU和Dice性能指标
 def calculate_metrics(model, data_loader, device):
     model.eval()
     iou_scores = []
-    precision_scores = []  # 用于计算AP
-    recall_scores = []     # 用于计算AP
-    
-    # 多个IoU阈值，用于计算AP
-    iou_thresholds = [0.5, 0.55, 0.6, 0.65, 0.7, 0.75, 0.8, 0.85, 0.9, 0.95]
+    dice_scores = []
     
     with torch.no_grad():
         for images, masks in tqdm(data_loader, desc="计算性能指标"):
@@ -180,67 +176,31 @@ def calculate_metrics(model, data_loader, device):
             
             batch_size = true_masks.size(0)
             
-            # 计算每个样本的IoU
             for i in range(batch_size):
-                pred = pred_masks[i].view(-1)
-                true = true_masks[i].view(-1)
-                
-                # 计算交集和并集
-                intersection = (pred * true).sum().item()
-                union = (pred + true).gt(0).sum().item()  # 大于0的位置视为并集
+                pred = pred_masks[i].cpu().numpy()
+                true = true_masks[i].cpu().numpy()
                 
                 # 计算IoU
+                pred_flat = pred.flatten()
+                true_flat = true.flatten()
+                
+                intersection = np.logical_and(pred_flat, true_flat).sum()
+                union = np.logical_or(pred_flat, true_flat).sum()
+                
                 iou = intersection / (union + 1e-6)
                 iou_scores.append(iou)
                 
-                # 计算精确度和召回率
-                true_positives = (pred * true).sum().item()
-                pred_positives = pred.sum().item()
-                actual_positives = true.sum().item()
-                
-                precision = true_positives / (pred_positives + 1e-6)
-                recall = true_positives / (actual_positives + 1e-6)
-                
-                precision_scores.append(precision)
-                recall_scores.append(recall)
+                # 计算Dice系数
+                dice = (2.0 * intersection) / (pred_flat.sum() + true_flat.sum() + 1e-6)
+                dice_scores.append(dice)
     
-    # 计算平均IoU
+    # 计算平均IoU和Dice
     avg_iou = np.mean(iou_scores)
-    
-    # 计算AP（不同IoU阈值下的平均精确度）
-    ap_scores = []
-    
-    # 按召回率排序精确度
-    indices = np.argsort(recall_scores)
-    sorted_precision = np.array(precision_scores)[indices]
-    sorted_recall = np.array(recall_scores)[indices]
-    sorted_iou = np.array(iou_scores)[indices]
-    
-    # 计算每个IoU阈值下的AP
-    for threshold in iou_thresholds:
-        # 获取IoU大于阈值的样本
-        mask = sorted_iou >= threshold
-        if not np.any(mask):
-            ap_scores.append(0.0)
-            continue
-            
-        precision_at_threshold = sorted_precision[mask]
-        recall_at_threshold = sorted_recall[mask]
-        
-        # 计算平均精确度
-        if len(recall_at_threshold) > 1:
-            # 使用梯形积分法计算曲线下面积
-            ap = np.trapz(precision_at_threshold, recall_at_threshold)
-            ap_scores.append(ap)
-        else:
-            ap_scores.append(precision_at_threshold[0])
-    
-    # 计算mAP
-    mean_ap = np.mean(ap_scores)
+    avg_dice = np.mean(dice_scores)
     
     return {
         "平均IoU": avg_iou,
-        "mAP": mean_ap
+        "平均Dice系数": avg_dice
     }
 
 # 实验设置
