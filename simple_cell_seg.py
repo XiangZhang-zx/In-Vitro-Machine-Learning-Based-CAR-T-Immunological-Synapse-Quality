@@ -101,7 +101,7 @@ class SimpleUNet(nn.Module):
         return torch.sigmoid(out)
 
 # 训练函数
-def train_model(model, train_loader, val_loader, device, num_epochs=5):
+def train_model(model, train_loader, val_loader, device, num_epochs=5, model_save_path="best_model.pth"):
     # 二值交叉熵损失函数
     criterion = nn.BCELoss()
     optimizer = torch.optim.Adam(model.parameters(), lr=0.001)
@@ -154,8 +154,7 @@ def train_model(model, train_loader, val_loader, device, num_epochs=5):
         if val_loss < best_val_loss:
             best_val_loss = val_loss
             print("保存最佳模型...")
-            model_path = os.path.join(".", "best_model.pth")
-            torch.save(model.state_dict(), model_path)
+            torch.save(model.state_dict(), model_save_path)
     
     return model
 
@@ -205,48 +204,75 @@ def calculate_metrics(model, data_loader, device):
 
 # 实验设置
 def main():
-    # 数据目录
-    base_dir = '/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/dataset/original'
-    train_img_dir = os.path.join(base_dir, 'train')
-    train_mask_dir = os.path.join(base_dir, 'train_annotation')
-    val_img_dir = os.path.join(base_dir, 'val')
-    val_mask_dir = os.path.join(base_dir, 'val_annotation')
-    test_img_dir = os.path.join(base_dir, 'test')
-    test_mask_dir = os.path.join(base_dir, 'test_annotation')
+    # 数据目录列表
+    dataset_dirs = [
+        '/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/dataset/original',
+        '/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/dataset/a',
+        '/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/dataset/b',
+        '/research/projects/trans_llm/Xiang_Zhang/In-Vitro-Machine-Learning-Based-CAR-T-Immunological-Synapse-Quality/dataset/c'
+    ]
     
-    # 设备配置
-    device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
-    print(f"使用设备: {device}")
+    dataset_names = ['原始数据集', 'A组(小加强)', 'B组(中加强)', 'C组(大加强)']
     
-    # 创建数据集
-    train_dataset = CellDataset(train_img_dir, train_mask_dir)
-    val_dataset = CellDataset(val_img_dir, val_mask_dir)
-    test_dataset = CellDataset(test_img_dir, test_mask_dir)
-    
-    # 数据加载器
-    batch_size = 8
-    train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
-    val_loader = DataLoader(val_dataset, batch_size=batch_size)
-    test_loader = DataLoader(test_dataset, batch_size=batch_size)
-    
-    print(f"训练集大小: {len(train_dataset)}")
-    print(f"验证集大小: {len(val_dataset)}")
-    print(f"测试集大小: {len(test_dataset)}")
-    
-    # 创建模型
-    model = SimpleUNet().to(device)
-    
-    # 训练模型
-    print("开始训练...")
-    model = train_model(model, train_loader, val_loader, device, num_epochs=5)
-    
-    # 评估模型
-    print("模型评估...")
-    metrics = calculate_metrics(model, test_loader, device)
-    for metric_name, value in metrics.items():
-        print(f"{metric_name}: {value:.4f}")
-    
-    print("训练和评估完成！")
+    # 循环处理每个数据集
+    for idx, base_dir in enumerate(dataset_dirs):
+        print("\n" + "="*80)
+        print(f"开始处理 {dataset_names[idx]} ({base_dir})")
+        print("="*80 + "\n")
+        
+        # 设置当前数据集的路径
+        train_img_dir = os.path.join(base_dir, 'train')
+        train_mask_dir = os.path.join(base_dir, 'train_annotation')
+        val_img_dir = os.path.join(base_dir, 'val')
+        val_mask_dir = os.path.join(base_dir, 'val_annotation')
+        test_img_dir = os.path.join(base_dir, 'test')
+        test_mask_dir = os.path.join(base_dir, 'test_annotation')
+        
+        # 检查数据集目录是否存在
+        if not os.path.exists(train_img_dir) or not os.path.exists(train_mask_dir):
+            print(f"警告: 跳过 {dataset_names[idx]}, 目录不存在: {train_img_dir} 或 {train_mask_dir}")
+            continue
+        
+        # 设备配置
+        device = torch.device('cuda' if torch.cuda.is_available() else 'cpu')
+        print(f"使用设备: {device}")
+        
+        # 创建数据集
+        train_dataset = CellDataset(train_img_dir, train_mask_dir)
+        val_dataset = CellDataset(val_img_dir, val_mask_dir)
+        test_dataset = CellDataset(test_img_dir, test_mask_dir)
+        
+        # 数据加载器
+        batch_size = 8
+        train_loader = DataLoader(train_dataset, batch_size=batch_size, shuffle=True)
+        val_loader = DataLoader(val_dataset, batch_size=batch_size)
+        test_loader = DataLoader(test_dataset, batch_size=batch_size)
+        
+        print(f"训练集大小: {len(train_dataset)}")
+        print(f"验证集大小: {len(val_dataset)}")
+        print(f"测试集大小: {len(test_dataset)}")
+        
+        # 创建模型
+        model = SimpleUNet().to(device)
+        
+        # 为当前数据集指定模型保存路径
+        dataset_name = os.path.basename(base_dir)
+        model_path = f"best_model_{dataset_name}.pth"
+        
+        # 训练模型
+        print("开始训练...")
+        model = train_model(model, train_loader, val_loader, device, num_epochs=5, model_save_path=model_path)
+        
+        # 评估模型
+        print("模型评估...")
+        metrics = calculate_metrics(model, test_loader, device)
+        print(f"\n{dataset_names[idx]}的评估结果:")
+        for metric_name, value in metrics.items():
+            print(f"{metric_name}: {value:.4f}")
+        
+        print(f"{dataset_names[idx]}训练和评估完成！\n")
+
+    print("\n所有数据集处理完成！")
 
 if __name__ == "__main__":
     main()
